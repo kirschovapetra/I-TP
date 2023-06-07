@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>kurier_registracia</id>
+	<initials>KUR-REG</initials>
+	<title>Registrácia kuriéra</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<!-- DATA -->
+	<data type="text">
+		<id>first_name</id>
+		<title>Meno</title>
+	</data>
+	<data type="text">
+		<id>last_name</id>
+		<title>Priezvisko</title>
+	</data>
+	<data type="text">
+		<id>phone_number</id>
+		<title>Telefónne číslo</title>
+		<valid>regex("(^\d*$)")</valid>
+	</data>
+	<data type="text">
+		<id>email</id>
+		<title>E-mail</title>
+		<valid>regex("^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")</valid>
+	</data>
+	<data type="text">
+		<id>password</id>
+		<title>Password</title>
+		<init>Heslo</init>
+	</data>
+	<data type="enumeration">
+		<id>request_state</id>
+		<title>Stav žiadosti</title>
+		<values>Čaká na schválenie</values>
+		<values>Schválená</values>
+		<values>Zamietnutá</values>
+		<init>Čaká na schválenie</init>
+	</data>
+	<data type="date">
+		<id>decision_date</id>
+		<title>Dátum rozhodnutia</title>
+	</data>
+	<data type="text">
+		<id>approver</id>
+		<title>Schvaľovateľ</title>
+	</data>
+	<data type="text">
+		<id>note</id>
+		<title>Poznámka</title>
+		<values>area</values>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<icon>person_add</icon>
+		<id>2</id>
+		<x>300</x>
+		<y>180</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Nový kuriér</label>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>first_name</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>last_name</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>phone_number</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>password</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+
+		<event type="finish">
+			<id>2_finish</id>
+			<actions phase="post">
+				<action>stav: f.request_state;
+change stav value { 
+    "Čaká na schválenie"
+}</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<icon>done</icon>
+		<id>4</id>
+		<x>500</x>
+		<y>140</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Schváliť</label>
+		<event type="finish">
+			<id>4_finish</id>
+			<actions phase="pre">
+				<action>meno: f.first_name,
+priezvisko: f.last_name,
+telefon: f.phone_number,
+email: f.email;
+
+def groupId = findCase{it.processIdentifier.eq("org_group")
+.and(it.author.id.eq(loggedUser().id))}?.stringId
+
+def kurier = createCase("${groupId}_kurier", "${email.value}_kurier" as String)
+def kurier_task = assignTask("2", kurier)
+
+def kurier_data = getData(kurier_task)
+def kontakt_task = findTask(kurier_data["contact_edit_taskref"].value[0])
+
+setData(kontakt_task, [
+    "first_name": [
+        "value": meno.value,
+        "type": "text"
+    ],
+    "last_name": [
+        "value": priezvisko.value,
+        "type": "text"
+    ],
+    "phone_number": [
+        "value": telefon.value,
+        "type": "text"
+    ],
+    "email": [
+        "value": email.value,
+        "type": "text"
+    ]
+])
+finishTask("2", kurier)
+				</action>
+			</actions>
+			<actions phase="post">
+				<action>
+rozhodnutie: t.29,
+datum: f.decision_date,
+schvalovatel: f.approver,
+stav: f.request_state;
+change stav value { 
+    "Schválená"
+}
+change datum value {
+    java.time.LocalDate.now()
+}
+change schvalovatel value {
+    loggedUser().fullName
+}
+</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<icon>close</icon>
+		<id>5</id>
+		<x>500</x>
+		<y>220</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Zamietnuť</label>
+		<dataGroup>
+			<id>DataGroup_0</id>
+		</dataGroup>
+		<event type="finish">
+			<id>5_finish</id>
+			<actions phase="post">
+				<action>stav: f.request_state;
+change stav value { 
+    "Zamietnutá"
+}</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<icon>info</icon>
+		<id>6</id>
+		<x>500</x>
+		<y>60</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Detail žiadosti</label>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>first_name</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>last_name</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>phone_number</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>request_state</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>password</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<icon>refresh</icon>
+		<id>13</id>
+		<x>380</x>
+		<y>300</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Odvolať sa</label>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>first_name</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>last_name</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>phone_number</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>note</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="finish">
+			<id>13_finish</id>
+			<actions phase="post">
+				<action>stav: f.request_state;
+change stav value { 
+    "Čaká na schválenie"
+}</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<icon>info</icon>
+		<id>29</id>
+		<x>740</x>
+		<y>220</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Rozhodnutie</label>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>request_state</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>decision_date</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>approver</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>password</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>1</id>
+		<x>180</x>
+		<y>180</y>
+		<label></label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>3</id>
+		<x>380</x>
+		<y>180</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>7</id>
+		<x>380</x>
+		<y>60</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>14</id>
+		<x>500</x>
+		<y>300</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>15</id>
+		<x>620</x>
+		<y>140</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>22</id>
+		<x>300</x>
+		<y>300</y>
+		<label></label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>26</id>
+		<x>620</x>
+		<y>220</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>8</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>9</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>7</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>11</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>3</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>12</id>
+		<type>read</type>
+		<sourceId>7</sourceId>
+		<destinationId>6</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>16</id>
+		<type>regular</type>
+		<sourceId>3</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>17</id>
+		<type>regular</type>
+		<sourceId>3</sourceId>
+		<destinationId>5</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>18</id>
+		<type>regular</type>
+		<sourceId>5</sourceId>
+		<destinationId>14</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>19</id>
+		<type>regular</type>
+		<sourceId>14</sourceId>
+		<destinationId>13</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>20</id>
+		<type>regular</type>
+		<sourceId>13</sourceId>
+		<destinationId>3</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>21</id>
+		<type>regular</type>
+		<sourceId>4</sourceId>
+		<destinationId>15</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>23</id>
+		<type>regular</type>
+		<sourceId>22</sourceId>
+		<destinationId>13</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>27</id>
+		<type>regular</type>
+		<sourceId>4</sourceId>
+		<destinationId>26</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>28</id>
+		<type>regular</type>
+		<sourceId>5</sourceId>
+		<destinationId>26</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>30</id>
+		<type>read</type>
+		<sourceId>26</sourceId>
+		<destinationId>29</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>31</id>
+		<type>regular</type>
+		<sourceId>26</sourceId>
+		<destinationId>13</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>

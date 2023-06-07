@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>pobocka</id>
+	<initials>POB</initials>
+	<title>Pobočka</title>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<!-- DATA -->
+	<data type="taskRef">
+		<id>address_taskref</id>
+		<title>Adresa</title>
+	</data>
+	<data type="taskRef">
+		<id>address_visible_taskref</id>
+		<title>Adresa_visible</title>
+	</data>
+	<data type="text">
+		<id>name</id>
+		<title>Názov pobočky</title>
+		<init>Pobočka 1</init>
+	</data>
+	<data type="text">
+		<id>opening_hours</id>
+		<title>Otváracie hodiny</title>
+		<placeholder>Pondelok - nedeľa 9:00 - 20:00</placeholder>
+		<values>area</values>
+	</data>
+	<data type="text">
+		<id>email</id>
+		<title>E-mailová adresa pobočky</title>
+		<valid>regex("^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")</valid>
+	</data>
+	<data type="text">
+		<id>phone_number</id>
+		<title>Telefónne číslo pobočky</title>
+		<placeholder>+421900000000</placeholder>
+		<valid>regex("(^[+]\d*)|(\d*)")</valid>
+	</data>
+	<data type="text">
+		<id>firma_caseId</id>
+		<title>firma_caseId</title>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>2</id>
+		<x>420</x>
+		<y>260</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Vytvoriť pobočku</label>
+		<icon>add_business</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<title>Pobočka</title>
+			<dataRef>
+				<id>name</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>phone_number</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>opening_hours</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>address_taskref</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>firma_caseId</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>1_assign</id>
+			<actions phase="pre">
+				<action>
+					adresa_ref: f.address_taskref;
+					def groupId = findCase{it.processIdentifier.eq("org_group")
+					.and(it.author.id.eq(loggedUser().id))}?.stringId
+					def adresa = createCase("${groupId}_adresa", "Adresa pobočky")
+					def konstruktor = assignTask("2", adresa)
+
+					change adresa_ref value {
+						[konstruktor.stringId]
+					}
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>1_finish</id>
+			<actions phase="pre">
+				<action>
+					adresa_ref_visible: f.address_visible_taskref,
+					adresa_ref: f.address_taskref;
+
+					def konstruktor = findTask(adresa_ref.value[0])
+					finishTask(konstruktor)
+
+					def edit_task = findTask({ it.caseId.eq(konstruktor.caseId).and(it.transitionId.eq("5"))})
+					change adresa_ref value {
+					[edit_task.stringId]
+					}
+
+					def view_task = findTask({ it.caseId.eq(konstruktor.caseId).and(it.transitionId.eq("4"))})
+					change adresa_ref_visible value {
+					[view_task.stringId]
+					}
+
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>4</id>
+		<x>540</x>
+		<y>97</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Zobraziť informácie o pobočke</label>
+		<icon>info</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<title>Pobočka</title>
+			<dataRef>
+				<id>name</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>phone_number</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>opening_hours</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>address_visible_taskref</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>5</id>
+		<x>541</x>
+		<y>414</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Editovať pobočku</label>
+		<icon>create</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<title>Pobočka</title>
+			<dataRef>
+				<id>name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>phone_number</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>opening_hours</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>address_taskref</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>6</id>
+		<x>660</x>
+		<y>260</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Zmazať</label>
+		<icon>delete</icon>
+		<event type="finish">
+			<id>1_finish</id>
+			<actions phase="post">
+				<action>
+					firma_caseId:f.firma_caseId,
+					address_visible_taskref: f.address_visible_taskref;
+
+					def view_address_task = findTask(address_visible_taskref.value[0])
+
+					change firma_caseId value{""}
+
+					<!-- vymazanie adresy -->
+					def delete_task = findTask({ it.caseId.eq(view_address_task.caseId).and(it.transitionId.eq("6"))})
+					assignTask(delete_task)
+					finishTask(delete_task)
+
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>7</id>
+		<x>541</x>
+		<y>312</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>8</id>
+		<x>780</x>
+		<y>260</y>
+		<label>Pobočka zmazaná</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>19</id>
+		<x>300</x>
+		<y>260</y>
+		<label></label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>44</id>
+		<x>542</x>
+		<y>185</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>11</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>7</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>15</id>
+		<type>regular</type>
+		<sourceId>7</sourceId>
+		<destinationId>6</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>17</id>
+		<type>regular</type>
+		<sourceId>6</sourceId>
+		<destinationId>8</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>39</id>
+		<type>regular</type>
+		<sourceId>5</sourceId>
+		<destinationId>7</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>571</x><y>359</y></breakPoint>
+	</arc>
+	<arc>
+		<id>40</id>
+		<type>regular</type>
+		<sourceId>7</sourceId>
+		<destinationId>5</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>515</x><y>360</y></breakPoint>
+	</arc>
+	<arc>
+		<id>43</id>
+		<type>regular</type>
+		<sourceId>19</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>45</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>44</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>46</id>
+		<type>regular</type>
+		<sourceId>44</sourceId>
+		<destinationId>6</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>47</id>
+		<type>read</type>
+		<sourceId>44</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>

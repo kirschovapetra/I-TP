@@ -1,0 +1,539 @@
+{
+    "product1": {
+        "prod_code": 1,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product2": {
+        "prod_code": 2,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product3": {
+        "prod_code": 3,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product4": {
+        "prod_code": 4,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product5": {
+        "prod_code": 5,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product6": {
+        "prod_code": 6,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product7": {
+        "prod_code": 7,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product8": {
+        "prod_code": 8,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product9": {
+        "prod_code": 9,
+        "prod_name": "Ponožky",
+        "price_dph": 6.31,
+        "price_no_dph": 5.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 400,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product10": {
+        "prod_code": 10,
+        "prod_name": "Tepláky",
+        "price_dph": 28.99,
+        "price_no_dph": 24.99,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 10,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "5",
+                "text": "10/10, would buy again",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "5",
+                "text": "Isto si to kúpim znova",
+                "date": "2019-01-01"
+            },
+            {
+                "name": "Janko Hraško",
+                "rating": "5",
+                "text": "Petra, ty hejter",
+                "date": "2015-05-11"
+            },
+            {
+                "name": "Petra Kirschová",
+                "rating": "0",
+                "text": "Toto si fakt druhý krát nekúpim",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product11": {
+        "prod_code": 11,
+        "prod_name": "LCD Televízor Samsung",
+        "price_dph": 890.50,
+        "price_no_dph": 799.50,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 2,
+        "category_type": "Elektornika",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Anonym",
+                "rating": "0",
+                "text": "To čo je za cena????",
+                "date": "2021-04-06"
+            }
+        ]
+    },
+    "product12": {
+        "prod_code": 12,
+        "prod_name": "Mixér 'Mixuj všetko 3000'",
+        "price_dph": 68.31,
+        "price_no_dph": 47.20,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 0,
+        "category_type": "Elektronika",
+        "order_status": "Nedostupné",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Jožko Mrkvička",
+                "rating": "4",
+                "text": "dsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdff dsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdffdsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdff dsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdffdsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdff dsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdffdsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdff dsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdffdsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdff dsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdffdsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdff dsjfjdfbdjbhfjd sdjfbdjbj sdfbskdfjsdfbk vdfjkdnfvjdfvjkdfvkbdvkdff",
+                "date": "2020-04-23"
+            },
+            {
+                "name": "Ferko Mrkvička",
+                "rating": "2",
+                "text": "nfvjdfvjkdfvkbdvkdff",
+                "date": "2019-01-01"
+            }
+        ]
+    },
+    "product13": {
+        "prod_code": 13,
+        "prod_name": "Zimná bunda",
+        "price_dph": 85.31,
+        "price_no_dph": 75.00,
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "shortDescription": "Niečo málo popísané k produktu.",
+        "parameters": "100% bavlna,unisex",
+        "warranty": 3,
+        "quantity": 13,
+        "category_type": "Oblečenie",
+        "order_status": "Na sklade",
+        "images": [
+            "products/500x500.png",
+            "products/400x600.png",
+            "products/600x400.png",
+            "products/600x500.png"
+        ],
+        "reviews": [
+            {
+                "name": "Snoro",
+                "rating": "4",
+                "text": "eh",
+                "date": "2021-05-06"
+            }
+        ]
+    }
+}

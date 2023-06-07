@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>produkt_v_kosiku</id>
+	<initials>PROD-KOS</initials>
+	<title>Produkt v košíku</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<!-- DATA -->
+	<data type="text">
+		<id>product_ref</id>
+		<title>product_ref</title>
+		<action trigger="set">
+			product_ref: f.this,
+			product_name: f.product_name,
+			product_info: f.product_info_ref;
+
+			def product = findCase({
+				it._id.eq(new org.bson.types.ObjectId(product_ref.value))
+			});
+
+			change product_name value {
+				product.getFieldValue("prod_name")
+			}
+
+			<!-- change product_info value {
+				findTask({
+					it.caseId.eq(product.stringId)
+					.and(it.transitionId.eq("37"))
+				})
+			} -->
+		</action>
+	</data>
+	<data type="text">
+		<id>cart_ref</id>
+		<title>cart_ref</title>
+	</data>
+	<data type="number">
+		<id>count</id>
+		<title>Počet</title>
+		<init>1</init>
+		<action trigger="set">
+			product_ref: f.product_ref,
+			count: f.this,
+			vat: f.total_amount_vat,
+			noVat: f.total_amount_no_vat;
+
+			def product = findCase({
+				it._id.eq(new org.bson.types.ObjectId(product_ref.value))
+			});
+
+			product.dataSet["quantity"].value -= count.value
+			workflowService.save(product)
+
+			change vat value {
+				return (product.dataSet["price_dph"].value * count.value).round(2)
+			}
+
+			change noVat value {
+				return (product.dataSet["price_no_dph"].value * count.value).round(2)
+			}
+		</action>
+	</data>
+	<data type="number">
+		<id>total_amount_no_vat</id>
+		<title>Cena bez DPH</title>
+		<init>0</init>
+	</data>
+	<data type="number">
+		<id>total_amount_vat</id>
+		<title>Cena s DPH</title>
+		<init>0</init>
+	</data>
+	<data type="boolean">
+		<id>delete</id>
+		<title>Zmazať</title>
+		<init>false</init>
+	</data>
+	<data type="text">
+		<id>product_name</id>
+		<title>product_name</title>
+	</data>
+	<data type="taskRef">
+		<id>product_info_ref</id>
+		<title>product_info_ref</title>
+	</data>
+	<data type="boolean">
+		<id>product_info_button</id>
+		<title>Show product info</title>
+	</data>
+	<data type="taskRef">
+		<id>read_ref</id>
+		<title>read_ref</title>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>2</id>
+		<x>340</x>
+		<y>380</y>
+		<layout>
+			<cols>6</cols>
+			<offset>0</offset>
+		</layout>
+		<label>Create</label>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>product_ref</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>cart_ref</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>1</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>count</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>5</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>total_amount_no_vat</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>3</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>product_name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>3</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="finish">
+			<id>2_finish</id>
+			<actions phase="post">
+				<action>
+                    read_ref: f.read_ref;
+
+                    change read_ref value {
+                        def task = findTask({
+                            it.caseId.eq(useCase.stringId).and(it.transitionId.eq("6"))
+                        });
+
+                        return [task?.stringId];
+                    }
+                </action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>4</id>
+		<x>700</x>
+		<y>380</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Delete</label>
+		<assignPolicy>auto</assignPolicy>
+		<finishPolicy>auto_no_data</finishPolicy>
+		<event type="finish">
+			<id>delete</id>
+			<actions phase="pre">
+				<action>
+					product_ref: f.product_ref,
+					count: f.count,
+					deleteFlag: f.delete;
+
+					def product = findCase({
+						it._id.eq(new org.bson.types.ObjectId(product_ref.value))
+					});
+
+					product.dataSet["quantity"].value += count.value
+					workflowService.save(product)
+
+					change deleteFlag value {
+						return true
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>6</id>
+		<x>520</x>
+		<y>138</y>
+		<layout>
+			<cols>6</cols>
+			<offset>0</offset>
+		</layout>
+		<label>Read</label>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>count</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>3</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>product_name</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>3</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>total_amount_vat</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>5</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>total_amount_no_vat</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>4</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>15</id>
+		<x>518</x>
+		<y>575</y>
+		<layout>
+			<cols>6</cols>
+			<offset>0</offset>
+		</layout>
+		<label>Update</label>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>delete</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>5</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance></appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>read_ref</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>5</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>1</id>
+		<x>180</x>
+		<y>380</y>
+		<label></label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>5</id>
+		<x>900</x>
+		<y>380</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>18</id>
+		<x>520</x>
+		<y>458</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>19</id>
+		<x>521</x>
+		<y>298</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>8</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>11</id>
+		<type>regular</type>
+		<sourceId>4</sourceId>
+		<destinationId>5</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>20</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>19</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>21</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>18</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>22</id>
+		<type>regular</type>
+		<sourceId>18</sourceId>
+		<destinationId>15</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>23</id>
+		<type>regular</type>
+		<sourceId>15</sourceId>
+		<destinationId>18</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>24</id>
+		<type>regular</type>
+		<sourceId>18</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>25</id>
+		<type>regular</type>
+		<sourceId>19</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>26</id>
+		<type>read</type>
+		<sourceId>19</sourceId>
+		<destinationId>6</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>

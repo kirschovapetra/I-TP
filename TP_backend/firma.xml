@@ -1,0 +1,2140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>company</id>
+	<initials>CMPNY</initials>
+	<title>Firma</title>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<role>
+		<id>firma</id>
+		<title>Firma</title>
+	</role>
+	<role>
+		<id>admin</id>
+		<title>Admin</title>
+	</role>
+	<!-- DATA -->
+	<!-- info o firme -->
+	<data type="text">
+		<id>company_name</id>
+		<title>Obchodné meno firmy</title>
+		<init>Firma</init>
+	</data>
+	<data type="enumeration">
+		<id>company_type</id>
+		<title>Typ obchodnej spoločnosti</title>
+		<values>Verejná obchodná spoločnosť (v.o.s.)</values>
+		<values>Komanditná spoločnosť (k.s.)</values>
+		<values>Spoločnosť s ručením obmedzeným (s.r.o.)</values>
+		<values>Akciová spoločnosť (a.s.)</values>
+		<init>Spoločnosť s ručením obmedzeným (s.r.o.)</init>
+	</data>
+	<data type="text">
+		<id>ico</id>
+		<title>IČO</title>
+		<placeholder>00000000</placeholder>
+		<desc>Identifikačné číslo organizácie (8-miestne)</desc>
+		<valid>regex("(^\d{8}$)")</valid>
+		<init>00000000</init>
+	</data>
+	<data type="text">
+		<id>dic</id>
+		<title>DIČ</title>
+		<placeholder>0000000000</placeholder>
+		<desc>Daňové identifikačné číslo (10-miestne)</desc>
+		<valid>regex("(^\d{10}$)")</valid>
+		<init>0000000000</init>
+	</data>
+	<data type="text">
+		<id>ic_dph</id>
+		<title>IČ DPH</title>
+		<placeholder>SK0000000000</placeholder>
+		<desc>Identifikačné číslo pre DPH (kód krajiny + DIČ)</desc>
+		<valid>regex("(^\D{2,5}\d{10}$)")</valid>
+		<init>SK0000000000</init>
+	</data>
+	<data type="date">
+		<id>registration_date</id>
+		<title>Dátum vytvorenia žiadosti</title>
+	</data>
+	<!-- adresa -->
+	<data type="taskRef">
+		<id>address_taskRef</id>
+		<title>Adresa</title>
+	</data>
+	<data type="taskRef">
+		<id>address_detail_taskRef</id>
+		<title>Adresa detail</title>
+	</data>
+	<!-- pobocky -->
+	<data type="taskRef">
+		<id>store_taskRef</id>
+		<title>Pobočka</title>
+	</data>
+	<data type="taskRef">
+		<id>store_detail_taskRef</id>
+		<title>Pobočka detail</title>
+	</data>
+	<data type="enumeration_map">
+		<id>store_map</id>
+		<title>Zoznam pobočiek</title>
+		<action trigger="get">
+			trans:t.48,
+			edit_store_button:f.edit_store_button,
+			view_store_button:f.view_store_button,
+			delete_store_button:f.delete_store_button,
+			store_map: f.store_map;
+			<!-- getnutie groupId -->
+			def groupId = findCase{it.processIdentifier.eq("org_group")
+			.and(it.author.id.eq(loggedUser().id))}?.stringId
+			<!-- getnutie vsetkych pobociek firmy podla firma_caseId -->
+			def pobocky = findCases({it.processIdentifier.eq(groupId+"_pobocka")
+			.and(it.dataSet.get("firma_caseId").value.eq(useCase.stringId))})
+
+			change store_map options {
+				[ (""): ""] + pobocky.collectEntries{
+					[(it.stringId): it.title + ": " + it.dataSet["name"].value]
+				}
+			}
+			<!-- schovanie editovacich tlacidiel -->
+			make edit_store_button,hidden on trans when {true}
+			make view_store_button,hidden on trans when {true}
+			make delete_store_button,hidden on trans when {true}
+		</action>
+		<action trigger="set">
+			trans:t.48,
+			edit_store_button:f.edit_store_button,
+			view_store_button:f.view_store_button,
+			delete_store_button:f.delete_store_button,
+			store_detail_taskRef:f.store_detail_taskRef,
+			store_map:f.store_map;
+
+			change store_detail_taskRef value {
+				if (store_map.value == "") {
+			<!-- skryte buttony -->
+			make edit_store_button,hidden on trans when {true}
+					make view_store_button,hidden on trans when {true}
+					make delete_store_button,hidden on trans when {true}
+					return []
+				}
+
+				def view_task = findTask({it.caseId.eq(store_map.value).and(it.transitionId.eq("4"))})
+
+				if (view_task == null) {
+			<!-- skryte buttony -->
+			make edit_store_button,hidden on trans when {true}
+					make view_store_button,hidden on trans when {true}
+					make delete_store_button,hidden on trans when {true}
+					return []
+				} else {
+			<!-- odokryty edit a delete button -->
+			make edit_store_button,editable on trans when {true}
+					make view_store_button,hidden on trans when {true}
+					make delete_store_button,editable on trans when {true}
+					return [view_task.stringId]
+				}
+			}
+		</action>
+	</data>
+	<!-- buttony -->
+	<data type="button">
+		<id>edit_store_button</id>
+		<title>Upraviť</title>
+		<action trigger="set">
+			trans:t.48,
+			edit_store_button:f.edit_store_button,
+			view_store_button:f.view_store_button,
+			delete_store_button:f.delete_store_button,
+			store_map: f.store_map,
+			store_detail_taskRef:  f.store_detail_taskRef;
+			<!-- edit: hidden, ostatne editable -->
+			make edit_store_button,hidden on trans when {true}
+			make view_store_button,editable on trans when {true}
+			make delete_store_button,visible on trans when {true}
+			<!-- enum. mapa visible - neda sa prepinat pri editovani produktu -->
+			make store_map,visible on trans when {true}
+			<!-- nastavenie taskRefu na edit task vybranej pobocky -->
+			change store_detail_taskRef value {
+				if (store_map.value == "") return []
+
+				def edit_task = findTask({it.caseId.eq(store_map.value).and(it.transitionId.eq("5"))})
+				return edit_task == null ? [] : [edit_task.stringId]
+			}
+		</action>
+	</data>
+	<data type="button">
+		<id>view_store_button</id>
+		<title>OK</title>
+		<action trigger="set">
+			trans:t.48,
+			edit_store_button:f.edit_store_button,
+			view_store_button:f.view_store_button,
+			delete_store_button:f.delete_store_button,
+			store_map: f.store_map,
+			store_detail_taskRef:  f.store_detail_taskRef;
+			<!-- view: hidden, ostatne editable -->
+			make view_store_button,hidden on trans when {true}
+			make edit_store_button,editable on trans when {true}
+			make delete_store_button,editable on trans when {true}
+			<!-- enum. mapa editable -->
+			make store_map,editable on trans when {true}
+			<!-- nastavenie taskRefu na edit task vybranej pobocky -->
+			change store_detail_taskRef value {
+				if (store_map.value == "") return []
+
+				def view_task = findTask({ it.caseId.eq(store_map.value).and(it.transitionId.eq("4"))})
+				return view_task == null ? [] : [view_task.stringId]
+			}
+		</action>
+	</data>
+	<data type="button">
+		<id>delete_store_button</id>
+		<title>Zmazať</title>
+		<action trigger="set">
+			trans:t.48,
+			edit_store_button:f.edit_store_button,
+			view_store_button:f.view_store_button,
+			delete_store_button:f.delete_store_button,
+			store_map: f.store_map,
+			store_detail_taskRef:  f.store_detail_taskRef;
+			<!-- zmazanie pobocky -->
+			def delete_task = findTask({ it.caseId.eq(store_map.value).and(it.transitionId.eq("6"))})
+			<!-- default nastavenia -->
+			make edit_store_button,editable on trans when {true}
+			make view_store_button,hidden on trans when {true}
+			make delete_store_button,editable on trans when {true}
+			make store_map,editable on trans when {true}
+
+			change store_map value { ("") as String }
+
+
+			assignTask(delete_task)
+			finishTask(delete_task)
+		</action>
+	</data>
+	<!-- produkty -->
+	<data type="taskRef">
+		<id>product_taskRef</id>
+		<title>Produkt</title>
+	</data>
+	<data type="taskRef">
+		<id>product_detail_taskRef</id>
+		<title>Produkt detail</title>
+	</data>
+	<data type="enumeration_map">
+		<id>product_map</id>
+		<title>Zoznam produktov</title>
+		<action trigger="get">
+			trans:t.53,
+			edit_product_button: f.edit_product_button,
+			view_product_button: f.view_product_button,
+			delete_product_button: f.delete_product_button,
+			product_map: f.product_map;
+			<!-- getnutie groupId -->
+			def groupId = findCase{it.processIdentifier.eq("org_group")
+			.and(it.author.id.eq(loggedUser().id))}?.stringId
+			<!-- getnutie vsetkych produktov firmy podla firma_caseId -->
+			def produkty = findCases({it.processIdentifier.eq(groupId+"_produkt")
+							.and(it.dataSet.get("firma_caseId").value.eq(useCase.stringId))})
+			<!-- nacitanie pobociek do enum. mapy product_map -->
+			change product_map options {
+				[ (""): ""] + produkty.collectEntries{
+					[(it.stringId): "Produkt " + it.dataSet["prod_code"].value + ": "+ it.dataSet["prod_name"].value]
+				}
+			}
+			<!-- schovanie editovacich tlacidiel -->
+			make edit_product_button,hidden on trans when {true}
+			make view_product_button,hidden on trans when {true}
+			make delete_product_button,hidden on trans when {true}
+		</action>
+		<action trigger="set">
+			trans:t.53,
+			edit_product_button:f.edit_product_button,
+			view_product_button:f.view_product_button,
+			delete_product_button:f.delete_product_button,
+			product_detail_taskRef:  f.product_detail_taskRef,
+			product_map: f.product_map;
+			<!-- nastavenie taskRefu na view task vybraneho produktu -->
+			change product_detail_taskRef value {
+				if (product_map.value == "") {
+			<!-- skryte buttony -->
+			make edit_product_button,hidden on trans when {true}
+					make view_product_button,hidden on trans when {true}
+					make delete_product_button,hidden on trans when {true}
+					return []
+				}
+
+				def view_task = findTask({ it.caseId.eq(product_map.value).and(it.transitionId.eq("37"))})
+
+				if (view_task == null) {
+			<!-- skryte buttony -->
+			make edit_product_button,hidden on trans when {true}
+					make view_product_button,hidden on trans when {true}
+					make delete_product_button,hidden on trans when {true}
+					return []
+				} else {
+			<!-- odokryty edit a delete button -->
+			make edit_product_button,editable on trans when {true}
+					make view_product_button,hidden on trans when {true}
+					make delete_product_button,editable on trans when {true}
+					return [view_task.stringId]
+				}
+			}
+		</action>
+	</data>
+	<!-- buttony -->
+	<data type="button">
+		<id>edit_product_button</id>
+		<title>Upraviť</title>
+		<action trigger="set">
+			trans:t.53,
+			edit_product_button:f.edit_product_button,
+			view_product_button:f.view_product_button,
+			delete_product_button:f.delete_product_button,
+			product_map: f.product_map,
+			product_detail_taskRef:  f.product_detail_taskRef;
+			<!-- edit: hidden, ostatne editable-->
+			make edit_product_button,hidden on trans when {true}
+			make view_product_button,editable on trans when {true}
+			make delete_product_button,visible on trans when {true}
+			<!-- enum. mapa visible - neda sa prepinat pri editovani produktu -->
+			make product_map,visible on trans when {true}
+			<!-- nastavenie taskRefu na edit task vybraneho produktu -->
+			change product_detail_taskRef value {
+				if (product_map.value == "") return []
+
+				def edit_task = findTask({ it.caseId.eq(product_map.value).and(it.transitionId.eq("8"))})
+				return edit_task == null ? [] : [edit_task.stringId]
+			}
+		</action>
+	</data>
+	<data type="button">
+		<id>view_product_button</id>
+		<title>OK</title>
+		<action trigger="set">
+			trans:t.53,
+			edit_product_button:f.edit_product_button,
+			view_product_button:f.view_product_button,
+			delete_product_button:f.delete_product_button,
+			product_map: f.product_map,
+			product_detail_taskRef:  f.product_detail_taskRef;
+			<!-- view: hidden, ostatne editable-->
+			make view_product_button,hidden on trans when {true}
+			make edit_product_button,editable on trans when {true}
+			make delete_product_button,editable on trans when {true}
+			<!-- enum. mapa editable -->
+			make product_map,editable on trans when {true}
+			<!-- nastavenie taskRefu na view task vybraneho produktu -->
+			change product_detail_taskRef value {
+				if (product_map.value == "") return []
+
+				def view_task = findTask({ it.caseId.eq(product_map.value).and(it.transitionId.eq("37"))})
+				return view_task == null ? [] : [view_task.stringId]
+			}
+		</action>
+	</data>
+	<data type="button">
+		<id>delete_product_button</id>
+		<title>Zmazať</title>
+		<action trigger="set">
+			trans:t.53,
+			edit_product_button:f.edit_product_button,
+			view_product_button:f.view_product_button,
+			delete_product_button:f.delete_product_button,
+			product_map: f.product_map,
+			product_detail_taskRef:  f.product_detail_taskRef;
+			<!-- zmazanie produktu -->
+			def delete_task = findTask({ it.caseId.eq(product_map.value).and(it.transitionId.eq("6"))})
+			<!-- default nastavenia -->
+			make edit_product_button,editable on trans when {true}
+			make view_product_button,hidden on trans when {true}
+			make delete_product_button,editable on trans when {true}
+			make product_map,editable on trans when {true}
+
+			change product_map value { ("") as String }
+
+			assignTask(delete_task)
+			finishTask(delete_task)
+		</action>
+	</data>
+	<!-- import -->
+	<data type="taskRef">
+		<id>product_import_ref</id>
+		<title>product_import</title>
+	</data>
+	<data type="taskRef">
+		<id>reviews_taskref</id>
+		<title></title>
+	</data>
+	<data type="number">
+		<id>average_review</id>
+		<title>Priemerné hodnotenie</title>
+		<action trigger="get">
+			hodnotenia: f.reviews_taskref,
+			priemer: f.average_review;
+
+			if (hodnotenia.value?.size() &gt; 0) {
+				double priemerne_hodnotenie = 0
+				for (def hodnotenie : hodnotenia.value) {
+					def view_task = findTask(hodnotenie)
+					def data = getData(view_task)
+					priemerne_hodnotenie += (data["review_stars"].value as String).length()
+				}
+				change priemer value {
+					(priemerne_hodnotenie / (hodnotenia.value.size() as double)).round(1)
+				}
+			}
+		</action>
+	</data>
+	<data type="taskRef">
+		<id>taskRef_1</id>
+		<title>nove_hodnotenie</title>
+	</data>
+	<data type="text">
+		<id>email</id>
+		<title>Email</title>
+		<placeholder>jozko.mrkva@email.com</placeholder>
+		<init>jozko.mrkva@email.com</init>
+		<valid>regex("^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")</valid>
+	</data>
+	<data type="text">
+		<id>password</id>
+		<title>Heslo</title>
+		<placeholder>******</placeholder>
+		<init>heslo</init>
+	</data>
+	<data type="boolean">
+		<id>approved</id>
+		<title>Schválená</title>
+		<init>false</init>
+	</data>
+	<data type="file">
+		<id>picture</id>
+		<title>Profilová fotka</title>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>2</id>
+		<x>1340</x>
+		<y>500</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Vyplniť žiadosť / Firma</label>
+		<icon>description</icon>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>password</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>company_name</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>company_type</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>ico</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>dic</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>ic_dph</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>5</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>address_taskRef</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>picture</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>5</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>2_assign</id>
+			<actions phase="pre">
+				<action>
+					address_ref: f.address_taskRef;
+					<!-- getnutie groupId -->
+					def groupId = findCase{it.processIdentifier.eq("org_group")
+									  .and(it.author.id.eq(loggedUser().id))}?.stringId
+					<!-- vytvorenie novej adresy -->
+					def address = createCase("${groupId}_adresa", "Adresa firmy")
+					def constructor = assignTask("2", address)
+					<!-- set taskRefu pre vyplnenie adresy -->
+					change address_ref value { [constructor.stringId] }
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>2_finish</id>
+			<actions phase="pre">
+				<action>
+					registrationDate: f.registration_date,
+					address_ref: f.address_taskRef,
+					address_ref_detail: f.address_detail_taskRef;
+					<!-- nastavenie datumu registracie -->
+					change registrationDate value { java.time.LocalDate.now()}
+					<!-- finish tasku pre vytvorenie adresy -->
+					def constructor = findTask(address_ref.value[0])
+					finishTask(constructor)
+					<!-- set taskRefu pre view adresy -->
+					def view_task = findTask({ it.caseId.eq(constructor.caseId).and(it.transitionId.eq("4"))})
+					change address_ref_detail value { [view_task.stringId] }
+					<!-- set taskRefu pre editovanie adresy -->
+					def edit_task = findTask({ it.caseId.eq(constructor.caseId).and(it.transitionId.eq("5"))})
+					change address_ref value { [edit_task.stringId] }
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>7</id>
+		<x>2060</x>
+		<y>820</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Upraviť informácie o firme / Firma</label>
+		<icon>create</icon>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>company_name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>company_type</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>address_taskRef</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>ico</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>dic</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>ic_dph</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>picture</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>8</id>
+		<x>1220</x>
+		<y>860</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Zobraziť informácie o firme / Firma, Admin</label>
+		<icon>info</icon>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>company_name</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>password</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>address_detail_taskRef</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>company_type</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>ico</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>dic</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>ic_dph</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>registration_date</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>picture</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>6</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>9</id>
+		<x>1460</x>
+		<y>980</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Vymazať firmu / Firma</label>
+		<icon>delete</icon>
+		<assignPolicy>auto</assignPolicy>
+		<event type="finish">
+			<id>9_finish</id>
+			<actions phase="pre">
+				<action>
+					address_taskRef: f.address_taskRef,
+					store_map:f.store_map,
+					product_map:f.product_map;
+					<!-- vymazanie adresy -->
+					def address_task = findTask(address_taskRef.value[0])
+					def address_delete_task = findTask({ it.caseId.eq(address_task.caseId).and(it.transitionId.eq("6"))})
+
+					assignTask(address_delete_task)
+					finishTask(address_delete_task)
+					<!-- produkty firmy -->
+					def products = product_map.options
+					products.remove((""))
+					<!-- vymazanie vsetkych produktov -->
+					for (def i in products.keySet()) {
+						def delete_task = findTask({ it.caseId.eq(i as String).and(it.transitionId.eq("6"))})
+						async.run{
+							assignTask(delete_task)
+							finishTask(delete_task)
+						}
+					}
+					<!-- pobocky firmy -->
+					def stores = store_map.options
+					stores.remove((""))
+					<!-- vymazanie vsetkych pobociek -->
+					for (def i in stores.keySet()) {
+						def delete_task = findTask({ it.caseId.eq(i as String).and(it.transitionId.eq("6"))})
+						async.run {
+							assignTask(delete_task)
+							finishTask(delete_task)
+						}
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>26</id>
+		<x>1860</x>
+		<y>820</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Pridať pobočku / Firma</label>
+		<icon>add_business</icon>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>store_taskRef</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>26_assign</id>
+			<actions phase="pre">
+				<action>
+					store_taskRef: f.store_taskRef;
+					<!-- getnutie groupId -->
+					def groupId = findCase{it.processIdentifier.eq("org_group")
+									  .and(it.author.id.eq(loggedUser().id))}?.stringId
+					<!-- vytvorenie noveho case pobocky -->
+					def pobocka = createCase("${groupId}_pobocka", "Pobočka")
+					def constructor = assignTask("2", pobocka)
+					<!-- prepojenie pobocky s firmou cez firma_caseId -->
+					setData(constructor, [
+						"firma_caseId": ["value": useCase.stringId,"type": "text"]
+					])
+					<!-- nastavenie taskRefu na task vytvorenia pobocky -->
+					change store_taskRef value { [constructor.stringId] }
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>26_finish</id>
+			<actions phase="pre">
+				<action>
+					store_taskRef: f.store_taskRef;
+					def constructor = findTask(store_taskRef.value[0])
+					finishTask(constructor)
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>52</id>
+		<x>1660</x>
+		<y>820</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Pridať produkt / Firma</label>
+		<icon>add_circle</icon>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>product_taskRef</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>53_assign</id>
+			<actions phase="pre">
+				<action>
+					product_taskRef: f.product_taskRef;
+					<!-- getnutie groupId -->
+					def groupId = findCase{it.processIdentifier.eq("org_group")
+					.and(it.author.id.eq(loggedUser().id))}?.stringId
+					<!-- vytvorenie noveho case produktu -->
+					def product = createCase("${groupId}_produkt", "Produkt")
+					def constructor = assignTask("1", product)
+					<!-- prepojenie produktu s firmou cez firma_caseId -->
+					setData(constructor, [
+						"firma_caseId": [ "value": useCase.stringId, "type": "text"	]
+					])
+					<!-- nastavenie taskRefu na task vytvorenia produktu -->
+					change product_taskRef value { [constructor.stringId] }
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>53_finish</id>
+			<actions phase="pre">
+				<action>
+					product_taskRef: f.product_taskRef;
+					def constructor = findTask(product_taskRef.value[0])
+					finishTask(constructor)
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>48</id>
+		<x>1220</x>
+		<y>700</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Zobraziť zoznam pobočiek / Firma</label>
+		<icon>store</icon>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>edit_store_button</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>view_store_button</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>1</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>delete_store_button</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>store_map</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>store_detail_taskRef</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>48_assign</id>
+			<actions phase="pre">
+				<action>
+					store_map: f.store_map;
+					change store_map value { ("") as String }
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>48_finish</id>
+			<actions phase="pre">
+				<action>
+					store_map: f.store_map,
+					trans:t.48,
+					edit_store_button:f.edit_store_button,
+					view_store_button:f.view_store_button,
+					delete_store_button:f.delete_store_button;
+					<!-- default nastavenia -->
+					make edit_store_button,editable on trans when {true}
+					make view_store_button,hidden on trans when {true}
+					make delete_store_button,editable on trans when {true}
+					make store_map,editable on trans when {true}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>53</id>
+		<x>1220</x>
+		<y>780</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Zobraziť zoznam produktov / Firma</label>
+		<icon>storage</icon>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>edit_product_button</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>view_product_button</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>1</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>delete_product_button</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>product_map</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>product_detail_taskRef</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>53_assign</id>
+			<actions phase="pre">
+				<action>
+					product_map: f.product_map;
+					change product_map value { ("") as String }
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>53_finish</id>
+			<actions phase="pre">
+				<action>
+					product_map: f.product_map,
+					trans:t.53,
+					edit_product_button:f.edit_product_button,
+					view_product_button:f.view_product_button,
+					delete_product_button:f.delete_product_button;
+					<!-- default nastavenia -->
+					make edit_product_button,editable on trans when {true}
+					make view_product_button,hidden on trans when {true}
+					make delete_product_button,editable on trans when {true}
+					make product_map,editable on trans when {true}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>60</id>
+		<x>2260</x>
+		<y>820</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Importovať produkty / Firma</label>
+		<icon>cloud_upload</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>product_import_ref</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>52_assign</id>
+			<actions phase="pre">
+				<action>
+					product_import_ref: f.product_import_ref;
+					<!-- getnutie groupId -->
+					def groupId = findCase{it.processIdentifier.eq("org_group")
+					.and(it.author.id.eq(loggedUser().id))}?.stringId
+					<!-- vytvorenie noveho case pre import produktov -->
+					def product_import = createCase("${groupId}_produkt_import", "Import produktov")
+					def constructor = assignTask("3", product_import)
+					<!--  -->
+					setData(constructor, [
+						"firma_caseId": [ "value": useCase.stringId, "type": "text" ]
+					])
+
+					change product_import_ref value { [constructor.stringId] }
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>52_finish</id>
+			<actions phase="pre">
+				<action>
+					
+					product_import_ref: f.product_import_ref;
+					def constructor = findTask(product_import_ref.value[0])
+					finishTask(constructor)
+
+					def view_task = findTask({ it.caseId.eq(constructor.caseId).and(it.transitionId.eq("4"))})
+
+					change product_import_ref value {
+						[view_task.stringId]
+					}
+					
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>74</id>
+		<x>1460</x>
+		<y>580</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Schválenie vytvorenia firmy / Admin</label>
+		<icon>check_circle</icon>
+		<assignPolicy>auto</assignPolicy>
+		<finishPolicy>auto_no_data</finishPolicy>
+		<event type="finish">
+			<id>74_finish</id>
+			<actions phase="pre">
+				<action>
+					approved: f.approved;
+
+					change approved value {
+						true
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>79</id>
+		<x>1620</x>
+		<y>500</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Zamietnutie vytvorenia firmy / Admin</label>
+		<icon>cancel</icon>
+		<assignPolicy>auto</assignPolicy>
+		<finishPolicy>auto_no_data</finishPolicy>
+		<event type="finish">
+			<id>79_finish</id>
+			<actions phase="pre">
+				<action>
+					approved: f.approved;
+
+					change approved value {
+						false
+					}
+				</action>
+			</actions>
+			<actions phase="post">
+				<action>
+					address_taskRef: f.address_taskRef;
+
+					def address_task = findTask(address_taskRef.value[0])
+					def address_delete_task = findTask({ it.caseId.eq(address_task.caseId).and(it.transitionId.eq("6"))})
+
+					assignTask(address_delete_task)
+					finishTask(address_delete_task)
+
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>t1</id>
+		<x>1220</x>
+		<y>940</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Zobraziť hodnotenie</label>
+		<icon>star</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>reviews_taskref</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>average_review</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>t2</id>
+		<x>2500</x>
+		<y>820</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Pridať hodnotenie</label>
+		<icon>star_half</icon>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>taskRef_1</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>t2_assign</id>
+			<actions phase="pre">
+				<action>taskref: f.taskRef_1;
+
+def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId
+def hodnotenie = createCase("${groupId}_hodnotenie" as String, "Hodnotenie firmy ${useCase.title}" as String)
+def konstruktor = assignTask("2", hodnotenie)
+change taskref value {
+	[konstruktor.stringId]
+}
+</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>t2_finish</id>
+			<actions phase="pre">
+				<action>hodnotenia: f.reviews_taskref,
+taskref: f.taskRef_1;
+
+def konstruktor = findTask(taskref.value[0])
+setData(konstruktor, [
+    "id_predmetu_hodnotenia": [
+        "value": useCase.stringId,
+        "type": "text"
+    ]
+])
+finishTask(konstruktor)
+
+def view_task = findTask({ it.caseId.eq(konstruktor.caseId).and(it.transitionId.eq("6"))})
+change hodnotenia value {
+					if (hodnotenia.value == null) {
+					return [view_task.stringId]
+					} else {
+    return [view_task.stringId] + hodnotenia.value
+					}
+}</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>110</id>
+		<x>1460</x>
+		<y>380</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Detail žiadosti</label>
+		<icon>info</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>email</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>company_name</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>company_type</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>ico</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>dic</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>ic_dph</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>5</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>approved</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>11</id>
+		<x>1460</x>
+		<y>1060</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>25</id>
+		<x>1940</x>
+		<y>780</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>41</id>
+		<x>1460</x>
+		<y>700</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>63</id>
+		<x>1220</x>
+		<y>500</y>
+		<label>Inicializácia</label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>65</id>
+		<x>1460</x>
+		<y>500</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>70</id>
+		<x>1820</x>
+		<y>500</y>
+		<label>Žiadosť zamietnutá</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>84</id>
+		<x>1580</x>
+		<y>780</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>85</id>
+		<x>1380</x>
+		<y>860</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>86</id>
+		<x>1420</x>
+		<y>780</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>93</id>
+		<x>2140</x>
+		<y>780</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>94</id>
+		<x>1740</x>
+		<y>780</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>p1</id>
+		<x>1340</x>
+		<y>940</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>p2</id>
+		<x>2380</x>
+		<y>780</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>111</id>
+		<x>1340</x>
+		<y>380</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>20</id>
+		<type>regular</type>
+		<sourceId>9</sourceId>
+		<destinationId>11</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>39</id>
+		<type>regular</type>
+		<sourceId>7</sourceId>
+		<destinationId>25</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1980</x>
+			<y>820</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>40</id>
+		<type>regular</type>
+		<sourceId>25</sourceId>
+		<destinationId>7</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2060</x>
+			<y>780</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>47</id>
+		<type>regular</type>
+		<sourceId>41</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>49</id>
+		<type>read</type>
+		<sourceId>41</sourceId>
+		<destinationId>48</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>73</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>65</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>75</id>
+		<type>regular</type>
+		<sourceId>65</sourceId>
+		<destinationId>74</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>78</id>
+		<type>regular</type>
+		<sourceId>63</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>80</id>
+		<type>regular</type>
+		<sourceId>65</sourceId>
+		<destinationId>79</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>81</id>
+		<type>regular</type>
+		<sourceId>79</sourceId>
+		<destinationId>70</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>83</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>41</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>87</id>
+		<type>read</type>
+		<sourceId>86</sourceId>
+		<destinationId>53</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>88</id>
+		<type>read</type>
+		<sourceId>85</sourceId>
+		<destinationId>8</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>89</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>86</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1420</x>
+			<y>580</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>90</id>
+		<type>regular</type>
+		<sourceId>86</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1420</x>
+			<y>980</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>91</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>85</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1380</x>
+			<y>580</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>92</id>
+		<type>regular</type>
+		<sourceId>85</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1380</x>
+			<y>980</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>95</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>84</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1580</x>
+			<y>580</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>96</id>
+		<type>regular</type>
+		<sourceId>84</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1580</x>
+			<y>980</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>97</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>93</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2140</x>
+			<y>580</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>98</id>
+		<type>regular</type>
+		<sourceId>93</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2140</x>
+			<y>980</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>100</id>
+		<type>regular</type>
+		<sourceId>94</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1740</x>
+			<y>980</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>101</id>
+		<type>regular</type>
+		<sourceId>84</sourceId>
+		<destinationId>52</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1660</x>
+			<y>780</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>102</id>
+		<type>regular</type>
+		<sourceId>52</sourceId>
+		<destinationId>84</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1620</x>
+			<y>820</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>103</id>
+		<type>regular</type>
+		<sourceId>60</sourceId>
+		<destinationId>93</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2180</x>
+			<y>820</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>104</id>
+		<type>regular</type>
+		<sourceId>93</sourceId>
+		<destinationId>60</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2260</x>
+			<y>780</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>105</id>
+		<type>regular</type>
+		<sourceId>26</sourceId>
+		<destinationId>94</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1820</x>
+			<y>820</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>106</id>
+		<type>regular</type>
+		<sourceId>94</sourceId>
+		<destinationId>26</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1860</x>
+			<y>780</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>107</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>94</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1740</x>
+			<y>580</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>108</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>25</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1940</x>
+			<y>580</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>109</id>
+		<type>regular</type>
+		<sourceId>25</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1940</x>
+			<y>980</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>a1</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>p1</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1340</x>
+			<y>580</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>a2</id>
+		<type>regular</type>
+		<sourceId>p1</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>1340</x>
+			<y>980</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>a3</id>
+		<type>read</type>
+		<sourceId>p1</sourceId>
+		<destinationId>t1</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>a4</id>
+		<type>regular</type>
+		<sourceId>74</sourceId>
+		<destinationId>p2</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2380</x>
+			<y>580</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>a5</id>
+		<type>regular</type>
+		<sourceId>p2</sourceId>
+		<destinationId>9</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2380</x>
+			<y>980</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>a6</id>
+		<type>regular</type>
+		<sourceId>p2</sourceId>
+		<destinationId>t2</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2500</x>
+			<y>780</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>a7</id>
+		<type>regular</type>
+		<sourceId>t2</sourceId>
+		<destinationId>p2</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint>
+			<x>2420</x>
+			<y>820</y>
+		</breakPoint>
+	</arc>
+	<arc>
+		<id>112</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>111</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>113</id>
+		<type>read</type>
+		<sourceId>111</sourceId>
+		<destinationId>110</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>

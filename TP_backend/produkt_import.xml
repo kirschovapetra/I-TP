@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>produkt_import</id>
+	<initials>PROD-IMP</initials>
+	<title>Import Produktov</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<role>
+		<id>firma</id>
+		<title>Firma</title>
+	</role>
+	<!-- DATA -->
+	<data type="file">
+		<id>csv_file</id>
+		<title>CSV súbor</title>
+	</data>
+	<data type="text">
+		<id>results</id>
+		<title>Výsledok</title>
+		<values>area</values>
+	</data>
+	<data type="text">
+		<id>firma_caseId</id>
+		<title>firma_caseId</title>
+	</data>
+	<data type="text">
+		<id>column_hint</id>
+		<title>Popis stĺpcov csv súboru</title>
+		<values>area</values>
+		<init>
+- kod (String, povinný)
+- nazov (String, povinný)
+- cenaDPH (Float, povinná)
+- stav (String)
+- kategoria (String)
+- popis (String)
+- parametre (String)
+- pocetKS (Integer)
+- zaruka (Integer)
+		</init>
+	</data>
+	<data type="text">
+		<id>categories_hint</id>
+		<title>Kategórie</title>
+		<values>area</values>
+		<init>
+- Elektronika
+- Biela technika
+- Dom a záhrada
+- Chovateľstvo
+- Detský tovar
+- Knihy, filmy, hry
+- Potraviny
+- Kozmetika a zdravie
+- Oblečenie
+- Šport
+- Nábytok
+- Iné
+		</init>
+	</data>
+	<data type="text">
+		<id>status_hint</id>
+		<title>Stav</title>
+		<values>area</values>
+		<init>
+- Na sklade
+- Na objednávku
+- Predpredaj
+		</init>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<icon>cloud_upload</icon>
+		<id>3</id>
+		<x>180</x>
+		<y>100</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Nahrajte csv súbor</label>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>column_hint</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>2</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>categories_hint</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>2</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>status_hint</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>2</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>csv_file</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>firma_caseId</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="finish">
+			<id>3_finish</id>
+			<actions phase="pre">
+				<action>
+					firma_caseId: f.firma_caseId,
+					results: f.results,
+					subor: f.csv_file;
+
+					<!-- getnutie groupId -->
+					def groupId = findCase{it.processIdentifier.eq("org_group")
+										.and(it.author.id.eq(loggedUser().id))}?.stringId
+
+					<!-- citanie csv suboru po riadkoch -->
+					def skip = true
+					new File(subor.value.path as String).splitEachLine(";") { cells ->
+						if (skip) {
+							skip = false
+							return;
+						}
+
+						try {
+							<!-- data z csv -->
+							def kod = cells[0]
+							def nazov = cells[1]
+							def cenaDPH = cells[2]
+							def stav = cells[3]
+							def kategoria = cells[4]
+							def popis = cells[5]
+							def parametre = cells[6]
+							def pocetKS = cells[7]
+							def zaruka = cells[8]
+
+							<!-- required: prod_code - kod, prod_name - nazov, price_dph - cenaDPH-->
+							if (kod == null || kod.length()==0 ||
+								nazov == null || nazov.length()==0 ||
+								cenaDPH == null || cenaDPH.length()==0 ) {
+								throw new Exception("Empty required fields\n")
+							}
+
+							<!-- vytvorenie noveho case produktu -->
+							def product = createCase("${groupId}_produkt", "Produkt")
+							def constructor = assignTask("1", product)
+
+							if (kategoria == null || kategoria.length()==0)
+								kategoria = "Iné" <!-- default kategoria -->
+
+							kategoria = kategoria.capitalize()
+							stav = stav.capitalize()
+
+							if (pocetKS == null || pocetKS.length()==0)
+								pocetKS = 1 as Integer <!-- default pocet kusov -->
+
+							<!-- set nacitanych dat produktu -->
+							setData(constructor, [
+								"firma_caseId": ["value":firma_caseId.value, "type":"text"],
+								"prod_code": ["value":kod, "type":"text"],
+								"prod_name": ["value":nazov, "type":"text"],
+								"parameters": ["value":parametre, "type":"text"],
+								"description": ["value":popis, "type":"text"],
+								"order_status": ["value":stav, "type":"text"],
+								"category_type": ["value":kategoria, "type":"text"],
+								"price_dph": ["value":cenaDPH as Double, "type":"number"],
+								"warranty": ["value":zaruka as Integer, "type":"number"],
+								"quantity": ["value":pocetKS as Integer, "type":"number"]
+							])
+							finishTask(constructor)
+
+							<!-- uspesne nacitanie riadku -->
+							if (results.value == null)
+								change results value { "${cells}: was imported successfully\n" as String }
+							else
+								change results value { "${results.value}${cells}: was imported successfully\n" as String }
+
+					}  catch (Exception e) {
+							<!-- neuspesne nacitanie riadku -->
+							def shortMsg = e.message.split("\n")
+							if (results.value == null)
+								change results value { "${cells}: ${shortMsg[0]}\n" as String }
+							else
+								change results value { "${results.value}${cells}: ${shortMsg[0]}\n" as String }
+						}
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<icon>info</icon>
+		<id>4</id>
+		<x>340</x>
+		<y>100</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Výsledok</label>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>results</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>3</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>1</id>
+		<x>100</x>
+		<y>100</y>
+		<label></label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>2</id>
+		<x>260</x>
+		<y>100</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>5</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>3</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>6</id>
+		<type>regular</type>
+		<sourceId>3</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>7</id>
+		<type>read</type>
+		<sourceId>2</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>

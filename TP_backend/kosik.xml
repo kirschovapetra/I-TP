@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>cart</id>
+	<initials>KOS</initials>
+	<title>Košík</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+    <!-- DATA -->
+    <data type="text">
+        <id>objednavka_caseId</id>
+        <title>objednavka_caseId</title>
+    </data>
+	<data type="enumeration_map">
+		<id>allItemsSelect</id>
+		<title>Zvoľte si produkt</title>
+		<action trigger="get">
+            items: f.this;
+
+            def groupId = findCase{it.processIdentifier.eq("org_group")
+            .and(it.author.id.eq(loggedUser().id))}?.stringId
+            
+            def products = findCases({
+				it.processIdentifier.eq("${groupId}_produkt" as String)
+			})
+			.findAll({ it.getFieldValue("quantity") &gt; 0 })
+			.findAll({it.getFieldValue("firma_caseId") != ""})
+			.findAll({it.getFieldValue("firma_caseId") != null})
+
+            change items options {
+                [ (""): ""] + products.collectEntries{
+                    [ (it.stringId): it.getFieldValue("prod_name") ]
+                }
+            }
+        </action>
+		<action trigger="set">
+            items: f.this,
+            selected_item: f.selected_item;
+
+            change selected_item value {
+                if (items.value == "") return []
+
+                def product_info = findTask({
+                    it.caseId.eq(items.value).and(it.transitionId.eq("37"))
+				})
+				
+				return product_info == null ? [] : [product_info.stringId]
+            }
+
+        </action>
+	</data>
+	<data type="taskRef">
+		<id>itemsInCart</id>
+        <title>Položky v košíku</title>
+        <action trigger="get">
+            items: f.this;
+
+            def groupId = findCase{it.processIdentifier.eq("org_group")
+            .and(it.author.id.eq(loggedUser().id))}?.stringId
+
+            change items value {
+				def products = findCases({
+					it.processIdentifier.eq("${groupId}_produkt_v_kosiku" as String)
+					.and(it.dataSet.get("cart_ref").value.eq(useCase.stringId))
+				}).collect({ it.stringId })
+
+				return products.collect({ caseId -> findTask({
+							it.caseId.eq(caseId).and(it.transitionId.eq("6"))
+						})
+					})
+					.findAll({ it != null })
+					.collect({ it.stringId })
+            }
+        </action>
+	</data>
+	<data type="taskRef">
+		<id>itemsInCartEdit</id>
+        <title>Položky v košíku</title>
+        <action trigger="get">
+            items: f.this;
+
+            def groupId = findCase{it.processIdentifier.eq("org_group")
+            .and(it.author.id.eq(loggedUser().id))}?.stringId
+
+            change items value {
+				def products = findCases({
+					it.processIdentifier.eq("${groupId}_produkt_v_kosiku" as String)
+					.and(it.dataSet.get("cart_ref").value.eq(useCase.stringId))
+				}).collect({ it.stringId })
+
+				return products.collect({ caseId -> findTask({
+							it.caseId.eq(caseId).and(it.transitionId.eq("15"))
+						})
+					})
+					.findAll({ it != null })
+					.collect({ it.stringId })
+            }
+		</action>
+	</data>
+	<data type="number">
+		<id>noVat</id>
+		<title>Cena bez DPH</title>
+		<init>0</init>
+		<action trigger="get">
+			noVat: f.this;
+
+			change noVat value {
+				noVat.value?.round(2)
+			}
+		</action>
+	</data>
+	<data type="number">
+		<id>vat</id>
+		<title>Cena s DPH</title>
+		<init>0</init>
+		<action trigger="get">
+			vat: f.this;
+
+			change vat value {
+				vat.value?.round(2)
+			}
+		</action>
+	</data>
+	<data type="number">
+		<id>count</id>
+		<title>Počet</title>
+		<desc>Počet kusov nemôže presahovať počet kusov na sklade</desc>
+		<init>1</init>
+	</data>
+	<data type="button">
+		<id>addButton</id>
+        <title>Pridať do košíka</title>
+        <action trigger="set">
+			items: f.allItemsSelect,
+			itemsInCart: f.itemsInCartEdit,
+			count: f.count,
+			selected_item: f.selected_item,
+			vat: f.vat,
+			noVat: f.noVat;
+
+            if (items.value == "") return
+
+            def groupId = findCase{it.processIdentifier.eq("org_group")
+			.and(it.author.id.eq(loggedUser().id))}?.stringId
+			
+			def product = findCase{ it._id.eq(new org.bson.types.ObjectId(items.value)) }
+			if (product.getFieldValue("quantity") &lt; count.value) {
+				throw new IllegalArgumentException("Počet kusov nemôže presahovať počet kusov na sklade")
+			}
+
+			def itemInCart = createCase("${groupId}_produkt_v_kosiku", "Produkt v košíku")
+			def createTask = findTask({
+				it.caseId.eq(itemInCart.stringId).and(it.transitionId.eq("2"))
+			})
+
+			assignTask(createTask)
+
+			setData(createTask, [
+				"product_ref": [
+					"value": items.value as String,
+					"type": "text"
+				],
+				"count": [
+					"value": count.value,
+					"type": "number"
+				],
+				"cart_ref": [
+					"value": useCase.stringId,
+					"type": "text"
+				]
+			])
+		
+			finishTask(createTask)
+
+			change vat value {
+				return vat.value + ( product.dataSet["price_dph"].value * count.value )
+			}
+
+			change noVat value {
+				return noVat.value + ( product.dataSet["price_no_dph"].value * count.value )
+			}
+
+			change items value {
+				return ""
+			}
+
+			change selected_item value {
+				return []
+			}
+
+			change itemsInCart value {
+				return []
+			}
+        </action>
+	</data>
+	<data type="button">
+		<id>deleteItemsButton</id>
+		<title>Delete items</title>
+		<action trigger="set">
+			items_in_cart: f.itemsInCartEdit,
+			vat: f.vat,
+			noVat: f.noVat;
+
+			items_in_cart.value
+				.collect({ taskId -> findTask(taskId) })
+				.findAll({ editTask -> getData(editTask)["delete"].value == true })
+				.collect({ editTask -> findTask({ it.caseId.eq(editTask.caseId).and(it.transitionId.eq("4")) }) })
+				.each({deleteTask ->
+					assignTask(deleteTask)
+					finishTask(deleteTask)
+				})
+
+			change items_in_cart value {
+				return []
+			}
+
+			def groupId = findCase{it.processIdentifier.eq("org_group")
+			.and(it.author.id.eq(loggedUser().id))}?.stringId
+
+			def products = findCases({
+				it.processIdentifier.eq("${groupId}_produkt_v_kosiku" as String)
+				.and(it.dataSet.get("cart_ref").value.eq(useCase.stringId))
+				.and(it.dataSet.get("delete").value.eq(false))
+			})
+
+			change vat value {
+				return products
+							.collect({ it.dataSet["total_amount_vat"].value })
+							.sum()
+			}
+
+			change noVat value {
+				return products
+							.collect({ it.dataSet["total_amount_no_vat"].value })
+							.sum()
+			}
+		</action>
+	</data>
+	<data type="taskRef">
+		<id>selected_item</id>
+		<title>Zvolený produkt</title>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>2</id>
+		<x>430</x>
+		<y>275</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+        <label>Add item</label>
+		<assignPolicy>auto</assignPolicy>
+		<event type="finish">
+			<id>2_finish</id>
+			<actions phase="pre">
+				<action>
+					items_in_cart: f.itemsInCartEdit;
+
+					if (items_in_cart.value?.isEmpty()) {
+						throw new IllegalArgumentException("Košík musí obsahovať aspoň 1 produkt");
+					}
+				</action>
+			</actions>
+		</event>
+		<dataGroup>
+			<id>cart</id>
+			<title>Obsah košíku</title>
+			<dataRef>
+				<id>objednavka_caseId</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>vat</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>noVat</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>deleteItemsButton</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>5</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>itemsInCartEdit</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>2</rows>
+					<cols>6</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<dataGroup>
+			<id>add_new</id>
+			<title>Pridať nový produkt</title>
+			<dataRef>
+				<id>allItemsSelect</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>optional</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>3</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>count</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>3</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>addButton</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>5</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+            </dataRef>
+		</dataGroup>
+		<dataGroup>
+			<id>product_information</id>
+			<title>Informácie o produkte</title>
+			<dataRef>
+				<id>selected_item</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>2</rows>
+					<cols>6</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>8</id>
+		<x>430</x>
+		<y>420</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+        <label>Close cart</label>
+		<assignPolicy>auto</assignPolicy>
+		<finishPolicy>auto_no_data</finishPolicy>
+	</transition>
+	<transition>
+		<id>11</id>
+		<x>427</x>
+		<y>548</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+        <label>Read cart</label>
+		<assignPolicy>auto</assignPolicy>
+		<dataGroup>
+			<id>cart_header_read</id>
+			<title>Suma položiek v košíku</title>
+			<dataRef>
+				<id>objednavka_caseId</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>vat</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>noVat</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<title>Položky v košíku</title>
+			<dataRef>
+				<id>itemsInCart</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>12</id>
+		<x>226</x>
+		<y>502</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Empty cart</label>
+		<assignPolicy>auto</assignPolicy>
+		<finishPolicy>auto_no_data</finishPolicy>
+		<event type="finish">
+			<id>delete_finish</id>
+			<actions phase="pre">
+				<action trigger="set">
+					<!-- skopírované z deleteItemsButton nakoľko funkcionalitaj je takmer totoťžná -->
+					items_in_cart: f.itemsInCartEdit,
+					vat: f.vat,
+					noVat: f.noVat;
+
+					items_in_cart.value
+						.collect({ taskId -> findTask(taskId) })
+						.collect({ editTask -> findTask({ it.caseId.eq(editTask.caseId).and(it.transitionId.eq("4")) }) })
+						.each({deleteTask ->
+							assignTask(deleteTask)
+
+							finishTask(deleteTask)
+						})
+
+					change items_in_cart value {
+						return []
+					}
+
+					<!-- počítanie ceny tu nechávam, aby sa pri zlynaní vyprázdenia nenastavila cena natvrdo na 0 -->
+					def groupId = findCase{it.processIdentifier.eq("org_group")
+						.and(it.author.id.eq(loggedUser().id))}?.stringId
+
+					def products = findCases({
+						it.processIdentifier.eq("${groupId}_produkt_v_kosiku" as String)
+						.and(it.dataSet.get("cart_ref").value.eq(useCase.stringId))
+						.and(it.dataSet.get("delete").value.eq(false))
+					})
+
+					change vat value {
+						return products
+							.collect({ it.dataSet["total_amount_vat"].value })
+							.sum()
+					}
+
+					change noVat value {
+						return products
+							.collect({ it.dataSet["total_amount_no_vat"].value })
+							.sum()
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>1</id>
+		<x>224</x>
+		<y>338</y>
+		<label></label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>4</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>7</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>1</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>318</x><y>277</y></breakPoint>
+	</arc>
+	<arc>
+		<id>9</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>8</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>13</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>12</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>14</id>
+		<type>regular</type>
+		<sourceId>12</sourceId>
+		<destinationId>1</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>254</x><y>418</y></breakPoint>
+	</arc>
+</document>
